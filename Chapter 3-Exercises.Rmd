@@ -5,11 +5,11 @@ output: html_document
 
 #Capítulo 3
 
-##Questão 8
+#Questão 8
 
 ```{r pressure, echo=FALSE}
 
-###A)
+#A)
 attach(Auto)
 q8a <- lm(mpg ~ horsepower)
 summary((q8a))
