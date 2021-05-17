@@ -1,0 +1,374 @@
+---
+title: "Chapter 3 - Exercises"
+output: html_document
+---
+
+#Capítulo 3
+
+##Questão 8
+
+```{r pressure, echo=FALSE}
+
+###A)
+attach(Auto)
+q8a <- lm(mpg ~ horsepower)
+summary((q8a))
+confint(q8a)
+predict(q8a, data.frame(horsepower=98), interval = "prediction")
+predict(q8a, data.frame(horsepower=98), interval = "confidence")
+
+#### There is a relationship between predictor and response due to high F-Statistic and P-value under 0,0001. 
+#### Relationship is strong due to high R², which indicates that more than 60% of the variance in the model is wxplained by the regressors here. and also the RSE/mean(response)= 0,2 whitch indicates a porcentage error of around 20%.
+#### The Relationship is negative, also proven by confidence interval
+#### predicted is 24,467. confidence: [23,9 ; 24,9]; prediction [14,8 ; 34,1]
+
+###B)
+plot(horsepower, mpg)
+abline(q8a, col="red")
+
+###C)
+par(mfrow=c(2,2))
+plot(q8a)
+####fit seems not too linear, probably using some polinomial would be better. running poly seems that would be better if we fit 2 grade poly
+
+
+```
+
+
+##Questão9
+```{r}
+###A)
+attach(Auto)
+pairs(Auto)
+
+###B)
+AutoQuali <- Auto[,-9] #to exclude categorical variable
+cor(AutoQuali)
+
+###C)
+q9b <- lm(mpg~. ,AutoQuali)
+summary(q9b)
+
+ #### by the p-value of the f-statistic we can assume that the null hypothesis is rejected. 
+#### displacement, weight, year and origin seem statistically significant.
+#### as cars get older, mpg raises
+
+###D)
+par(mfrow=c(2,2))
+plot(q9b)
+
+#### data look non linear, distribution look not normal, standarized residuals look high, as leverage as well. Observation n323, 327 and 326 look like outliers and obs n 14 look like high leverage
+
+
+
+###E)
+q9e1 <- lm(mpg ~.+horsepower:acceleration, AutoQuali)
+summary(q9e1)
+
+###F)
+
+####Log
+AutoQualiLog <- log(AutoQuali)
+q9flog <- lm(mpg ~., AutoQualiLog)
+summary(q9flog)
+
+####squared root
+AutoQualiRoot <- sqrt(AutoQuali)
+q9froot <- lm(mpg ~., AutoQualiRoot)
+summary(q9froot)
+
+####squared power
+AutoQualipower <- (AutoQuali^2)
+q9fpower <- lm(mpg ~., AutoQualipower)
+summary(q9fpower)
+
+#####seems like log is the best transformation for F(x)
+
+
+```
+
+
+
+##Question 10
+```{r}
+attach(Carseats)
+
+###A)
+q10a <- lm(Sales ~Price+Urban+US)
+summary(q10a)
+
+###B)
+
+####It seems like more expensive products leads to less sales as well as that in US are sold more carseats than in the rest of the world. On urban effects we can't tell because is not significant
+
+
+###C)
+
+####3 possible cenarios: y=b0 + b1*X1 + b2*X2 + b3*X3 + e if urban and US; y=b0 + b1*X1 + b2*X2 + e if only urban; y=b0 + b1*X1 + b3*X3 + e if only US; y=b0 + b1*X1 + e if none of the 2 options
+
+###D)
+
+####For Price and US because of the p-value
+
+###E)
+
+q10f <- lm(Sales ~Price+US)
+summary(q10f)
+
+###F)
+
+
+####Both fit badly. Model in E) should be better, but is still poor.
+
+###G)
+
+confint(q10f, level = 0.95)
+
+###H)
+
+plot(q10f)
+####no evidence of high leveradge or outliers
+
+```
+
+
+##Question 11
+```{r}
+
+set.seed(1)
+x=rnorm(100)
+y=2*x+rnorm (100)
+
+###A)
+
+q11a <- lm(y~x+0)
+summary(q11a)
+
+###B)
+
+q11b <- lm(x~y+0)
+summary(q11b)
+
+###C)
+
+####Both have same R², same F-statistic and p-value, and both variables are significant in each regression
+
+###D)
+
+n <- length(x)
+t <- sqrt(n - 1)*(x %*% y)/sqrt(sum(x^2) * sum(y^2) - (x %*% y)^2)
+as.numeric(t)
+
+###E)
+
+
+```
+##Question 13
+```{r}
+###A)
+set.seed(1)
+x <- rnorm(100)
+
+###B)
+
+eps <- rnorm(100, sd = sqrt(0.25))
+
+
+###C)
+
+y = -1 + 0.5*x + eps
+length(y)
+
+###D)
+plot(x,y)
+####seem to have linear reletionship
+
+###E)
+q13e <- lm(y~x)
+plot(x,y)
+abline(q13e, col="red")
+summary(q13e)
+
+####βˆ0 is a little bit lower, than βo and βˆ1 is little bit higher than β1
+
+###F)
+
+plot(x,y)
+abline(q13e, col="red")
+abline(-1, 0.5, col="blue")
+legend("topleft", c("Least square", "Regression"), col=c("red","blue"), lty=c(1,1)) #jeito legal de colocar legenda nos graficos
+
+
+###G)
+
+q13g <- lm(y~x+I(x^2))
+summary(q13g)
+
+#x^2 does not improve model fit
+
+
+
+
+
+
+
+
+
+```
+
+##Question 14
+```{r}
+###A)
+set.seed(1)
+x1=runif (100)
+x2=0.5*x1+rnorm (100)/10
+y=2+2*x1+0.3*x2+rnorm (100)
+
+###B)
+plot(x1,x2)
+cor(x1, x2)
+
+###C)
+q14c <- lm(y ~x1+x2)
+summary(q14c)
+
+####B0 is lower and the other coefficients are higher. We can reject the null hypothesis for B1, due to its level of p-value, but not for b2
+
+###D)
+q14d <- lm(y~x1)
+summary(q14d)
+
+###has improved significency on B1, we can reject the null hypothesis with for credibility
+
+###E)
+
+q14e <- lm(y~x2)
+summary(q14e)
+
+###we can reject the null hypothesis due the level of p-value
+
+
+
+###F)
+
+####Results in c) and e) don't contradict each other. It happens because both variables are higly correlated (83%), which indicates that they are pretty much redundunt. But, by the single regression we can see that x1 helps explain more than x2
+
+###G)
+x1m=c(x1, 0.1)
+x2m=c(x2, 0.8)
+ym=c(y,6)
+
+####multiple
+q14g <- lm(ym~x1m+x2m)
+summary(q14g)
+plot(q14g)
+#####generates a high leveradge point
+
+####x1m
+q14gx1 <- lm(ym~x1m)
+summary(q14gx1)
+plot(q14gx1)
+
+####x2m
+q14gx2 <- lm(ym~x2m)
+summary(q14gx2)
+plot(q14gx2)
+
+
+```
+
+###Questão 15
+```{r}
+attach(Boston)
+###A)
+
+####zn
+q15v1 <- lm(crim~zn)
+summary(q15v1)
+####indus
+q15v2 <- lm(crim~indus)
+summary(q15v2)
+
+####chas
+q15v3 <- lm(crim~chas)
+summary(q15v3)
+
+####nox
+q15v4 <- lm(crim~nox)
+summary(q15v4)
+
+####rm
+q15v5 <- lm(crim~rm)
+summary(q15v5)
+
+####age
+q15v6 <- lm(crim~age)
+summary(q15v6)
+
+####dis
+q15v7 <- lm(crim~dis)
+summary(q15v7)
+
+####rad
+q15v8 <- lm(crim~rad)
+summary(q15v8)
+
+
+####tax
+q15v9 <- lm(crim~tax)
+summary(q15v9)
+
+
+####ptratio
+q15v10 <- lm(crim~ptratio)
+summary(q15v10)
+
+
+####black
+q15v11 <- lm(crim~black)
+summary(q15v11)
+
+
+####lstat
+q15v12 <- lm(crim~lstat)
+summary(q15v12)
+
+
+####medv
+q15v13 <- lm(crim~medv)
+summary(q15v13)
+
+###B)
+q15b <- lm(crim~., Boston)
+summary(q15b)
+
+
+###C)
+
+simple_reg <- vector("numeric", 0)
+simple_reg <- c(simple_reg, q15v1$coefficients[2])
+simple_reg <- c(simple_reg, q15v2$coefficients[2])
+simple_reg <- c(simple_reg, q15v3$coefficients[2])
+simple_reg <- c(simple_reg, q15v4$coefficients[2])
+simple_reg <- c(simple_reg, q15v5$coefficients[2])
+simple_reg <- c(simple_reg, q15v6$coefficients[2])
+simple_reg <- c(simple_reg, q15v7$coefficients[2])
+simple_reg <- c(simple_reg, q15v8$coefficients[2])
+simple_reg <- c(simple_reg, q15v9$coefficients[2])
+simple_reg <- c(simple_reg, q15v10$coefficients[2])
+simple_reg <- c(simple_reg, q15v11$coefficients[2])
+simple_reg <- c(simple_reg, q15v12$coefficients[2])
+simple_reg <- c(simple_reg, q15v13$coefficients[2])
+
+mult_reg <- vector("numeric", 0)
+mult_reg <- c(mult_reg, q15b$coefficients)
+
+
+plot(simple_reg, mult_reg[-1])
+
+
+
+
+
+```
+
