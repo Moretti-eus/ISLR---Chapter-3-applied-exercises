@@ -1,0 +1,353 @@
+---
+title: "Chapter 5 - Statistical Learning"
+output: html_document
+---
+
+#Capitulo 5
+
+```{r}
+library(class)
+library(ISLR)
+library(MASS)
+library(boot)
+library(skimr)
+```
+
+
+##Q5
+```{r}
+##A)
+attach(Default)
+
+set.seed(1)
+skim(Default) ###just to check if we have any NAs and other problems
+
+glmq5 <- glm(default~income+balance, family = binomial)
+summary(glmq5)
+
+
+##B)
+trainq5 <- 1:(nrow(Default)*0.8)
+trainDefault <- Default[trainq5,]
+testDefault <- Default[-trainq5,]
+
+glmq5b <- glm(default~income+balance, family=binomial, data=trainDefault)
+summary(glmq5b)
+
+q5bpred <- predict(glmq5b, newdata = testDefault, type = "response")
+q5bprob <- ifelse(q5bpred>0.5, "Yes", "No")
+table(q5bprob, testDefault$default)
+mean(q5bprob==testDefault$default)
+
+      ###Validation set error = 50/2000=0.025
+
+##C)
+
+  ###First Split(75-25)
+trainq5C1 <- 1:(nrow(Default)*0.75)
+trainDefaultC1 <- Default[trainq5C1,]
+testDefaultC1 <- Default[-trainq5C1,]
+
+glmq5C1 <- glm(default~income+balance, family=binomial, data=trainDefaultC1)
+summary(glmq5C1)
+
+q5predC1 <- predict(glmq5C1, newdata = testDefaultC1, type = "response")
+q5probC1 <- ifelse(q5predC1>0.5, "Yes", "No")
+table(q5probC1, testDefaultC1$default)
+RatioCorrectC1 <-mean(q5probC1==testDefaultC1$default)
+
+  ###Second Split(70-30)
+trainq5C2 <- 1:(nrow(Default)*0.70)
+trainDefaultC2 <- Default[trainq5C2,]
+testDefaultC2 <- Default[-trainq5C2,]
+
+glmq5C2 <- glm(default~income+balance, family=binomial, data=trainDefaultC2)
+summary(glmq5C2)
+
+q5predC2 <- predict(glmq5C2, newdata = testDefaultC2, type = "response")
+q5probC2 <- ifelse(q5predC2>0.5, "Yes", "No")
+table(q5probC2, testDefaultC2$default)
+RatioCorrectC2 <-mean(q5probC2==testDefaultC2$default)
+
+  ###Third Split(90-10)
+trainq5C3 <- 1:(nrow(Default)*0.90)
+trainDefaultC3 <- Default[trainq5C3,]
+testDefaultC3 <- Default[-trainq5C3,]
+
+glmq5C3 <- glm(default~income+balance, family=binomial, data=trainDefaultC3)
+summary(glmq5C3)
+
+q5predC3 <- predict(glmq5C3, newdata = testDefaultC3, type = "response")
+q5probC3 <- ifelse(q5predC3>0.5, "Yes", "No")
+table(q5probC3, testDefaultC3$default)
+RatioCorrectC3 <-mean(q5probC3==testDefaultC3$default)
+
+      ###The best fit is with 70/30
+
+##D)
+
+glmq5D <- glm(default~income+balance+student, family = binomial, data=Default)
+summary(glmq5D)
+
+trainq5D <- 1:(nrow(Default)*0.8)
+trainDefaultD <- Default[trainq5D,]
+testDefaultD <- Default[-trainq5D,]
+
+glmq5D <- glm(default~income+balance+student, family=binomial, data=trainDefaultD)
+summary(glmq5D)
+
+q5bpredD <- predict(glmq5D, newdata = testDefaultD, type = "response")
+q5bprobD <- ifelse(q5bpredD>0.5, "Yes", "No")
+table(q5bprobD, testDefaultD$default)
+RationCorrectD<-mean(q5bprobD==testDefaultD$default)
+
+##Second Split (75-25)
+
+trainq5D1 <- 1:(nrow(Default)*0.75)
+trainDefaultD1 <- Default[trainq5D1,]
+testDefaultD1 <- Default[-trainq5D1,]
+
+glmq5D1 <- glm(default~income+balance+student, family=binomial, data=trainDefaultD1)
+summary(glmq5D1)
+
+q5bpredD1 <- predict(glmq5D1, newdata = testDefaultD1, type = "response")
+q5bprobD1 <- ifelse(q5bpredD1>0.5, "Yes", "No")
+table(q5bprobD1, testDefaultD1$default)
+RationCorrectD1<-mean(q5bprobD==testDefaultD$default)
+
+##Third Split (70-30)
+
+trainq5D2 <- 1:(nrow(Default)*0.70)
+trainDefaultD2 <- Default[trainq5D2,]
+testDefaultD2 <- Default[-trainq5D2,]
+
+glmq5D2<- glm(default~income+balance+student, family=binomial, data=trainDefaultD2)
+summary(glmq5D2)
+
+q5bpredD2 <- predict(glmq5D2, newdata = testDefaultD2, type = "response")
+q5bprobD2 <- ifelse(q5bpredD2>0.5, "Yes", "No")
+table(q5bprobD2, testDefaultD2$default)
+RationCorrectD2<-mean(q5bprobD2==testDefaultD2$default)
+
+      ###With dummy variable results get slighlty worse 
+
+```
+##Q6
+```{r}
+###A)
+set.seed(1)
+glmq6A <- glm(default~income+balance, data=Default, family = binomial)
+summary(glmq6A)
+
+##B)
+
+set.seed(1)
+    ###The function below is made to return just the coefficients of the regression. Then it will be used to fit in the "statistic" parameter in the boot function
+boot.fn <- function(data, index){
+  return(coef(glm(default~income+balance, data=Default, family = binomial, subset=index)))
+}
+boot.fn(Default, 1:nrow(Default)) ###teste para ver se resultados batem com item A)
+
+set.seed(1)
+boot.fn(Default, sample(nrow(Default), nrow(Default), replace = TRUE))
+
+##C)
+
+boot(Default, boot.fn, R=1000)
+
+##D)
+summary(glmq6A)
+
+###In this case, the estimates are pretty close to each other, but non bootstrap estimate seems to understiate a bit the errors.
+
+```
+##Q7
+```{r}
+
+
+##A)
+glmq7A <- glm(Direction~Lag1+Lag2, data= Weekly, family=binomial)
+summary(glmq7A)
+
+
+##B)
+
+trainq7B <- Weekly[2:nrow(Weekly),]
+
+glmq7B <- glm(Direction~Lag1+Lag2, data= trainq7B, family=binomial)
+summary(glmq7B)
+
+##C)
+testq7C <- Weekly[1,]
+predq7C <- predict(glmq7B, testq7C, type="response")
+prob7C <-ifelse(predq7C>0.5, "Up", "Down")
+
+prob7C
+print(Weekly$Direction[1])
+
+##D)
+
+error <- rep(0, nrow(Weekly))
+
+for (i in 1:nrow(Weekly)) {
+  glmq7D <- glm(Direction~Lag1+Lag2, data=Weekly[-i,], family=binomial)
+  predq7D <- predict(glmq7D, Weekly[i,], type="response") > 0.5
+  TRUEpred <- Weekly$Direction[i] == "Up"
+    if (predq7D!=TRUEpred)
+      error[i]<-1
+}
+
+error
+
+##E)
+    ###Taking the mean we will find the LOOCV estimator for the test error. which is the average of the n test error estimates. 
+mean(error)
+    ###0,44 represents that in 44% of the predicts, the LOOCV got it wrong
+
+```
+
+
+##Q8
+```{r}
+##A)
+set.seed(1)
+y <- rnorm(100)
+x <- rnorm(100)
+y <- x - 2 * x^2 + rnorm(100)
+
+    ###n=100; predictors=2
+
+##B)
+plot(x, y)
+
+##C)
+set.seed(1)
+Data <- data.frame(x, y)
+fit.glm.1 <- glm(y ~ x)
+cv.glm(Data, fit.glm.1)$delta[1]
+
+fit.glm.2 <- glm(y ~ poly(x, 2))
+cv.glm(Data, fit.glm.2)$delta[1]
+
+fit.glm.3 <- glm(y ~ poly(x, 3))
+cv.glm(Data, fit.glm.3)$delta[1]
+
+fit.glm.4 <- glm(y ~ poly(x, 4))
+cv.glm(Data, fit.glm.4)$delta[1]
+
+##D)
+set.seed(10)
+fit.glm.1 <- glm(y ~ x)
+cv.glm(Data, fit.glm.1)$delta[1]
+
+fit.glm.2 <- glm(y ~ poly(x, 2))
+cv.glm(Data, fit.glm.2)$delta[1]
+
+fit.glm.3 <- glm(y ~ poly(x, 3))
+cv.glm(Data, fit.glm.3)$delta[1]
+
+fit.glm.4 <- glm(y ~ poly(x, 4))
+cv.glm(Data, fit.glm.4)$delta[1]
+
+##F)
+
+summary(fit.glm.4)
+
+```
+
+
+##Q9
+
+```{r}
+library(MASS)
+
+##A)
+
+mi_hat <- mean(Boston$medv)
+
+##B)
+sd_error_hat <- sd(Boston$medv)/sqrt(nrow(Boston))
+
+##C)
+
+set.seed(1)
+boot.fnq9 <- function(data, index){
+  mu <- mean(data[index])
+  return(mu)
+}
+bootq9C <- boot(Boston$medv, boot.fnq9, 1000)
+
+    ###bootstrap estimated standard error of mi of 0.4119 is pretty close to the estimate found in (b)  0.4089
+
+##D)
+boot.ci(bootq9C)
+t.test(Boston$medv)
+
+##E)
+
+boot.fnq9e <- function(data, index){
+  med<-median(data[index])
+  return(med)
+}
+bootq9E<-boot(Boston$medv, boot.fnq9e, R=1000)
+bootq9E
+boot.ci(bootq9E)
+
+
+##F) 
+      ###Standard error is in the call of bootq9E
+
+##G)
+quantile(Boston$medv, probs = 0.1)
+
+##H)
+
+boot.fnq9H <- function(data, index){
+  quant <- quantile(data[index], probs = 0.1)
+  return(quant)
+}
+boot(Boston$medv, boot.fnq9H, R=1000)
+    ###Quantiles are the same, in bootstrap estimation we get standard error as well.ka
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
